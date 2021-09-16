@@ -35,24 +35,29 @@ function systemMessage(data) {
                 '<div style="color: white;font-size: large">群聊室</div>' +
                 '</div>');
             users.forEach(function (user) {
-                userList.append(
-                    '<div class="chat_item" onClick="chooseUser(\'' + user + '\',\'' + user + '\')">' +
-                    '<img class="avatar img-circle" src=' + defaultHeadImg + ' style="height: 50px;width: 50px">' +
-                    '<img id="redPoint-' + user + '" class="img-circle" src="../img/redPoint.png" style="height: 10px;width: 10px;position: absolute;left: 60;display: none">' +
-                    '<div style="color: white;font-size: large">' + user + '</div>' +
-                    '</div>');
-                appendString =
-                    ['<div class="box" id="box-' + user + '" style="display: none">',
-                        '    <div class="textareaHead" id="textareaHead">' + user + '</div>',
-                        '    <div class="textarea scroll" id="responseContent-' + user + '"></div>',
-                        '    <form onSubmit="return false;">',
-                        '        <label>',
-                        '            <textarea class="box_ft" name="message" id="sendTextarea-' + user + '"></textarea>',
-                        '        </label>',
-                        '        <div class="send"><button class="sendButton" onClick="sendMessageToUser(this.form.message.value, currentChatUserId)">发送</button></div>',
-                        '    </form>',
-                        '</div>'].join("");
-                repeatBox.append(appendString);
+                console.info(GetQueryString('nick'));
+                user = unescape(decodeURI(user))
+                console.info(user);
+                if(user != GetQueryString('nick')){
+                    userList.append(
+                        '<div class="chat_item" onClick="chooseUser(\'' + user + '\',\'' + user + '\')">' +
+                        '<img class="avatar img-circle" src=' + defaultHeadImg + ' style="height: 50px;width: 50px">' +
+                        '<img id="redPoint-' + user + '" class="img-circle" src="../img/redPoint.png" style="height: 10px;width: 10px;position: absolute;left: 60;display: none">' +
+                        '<div style="color: white;font-size: large">' + user + '</div>' +
+                        '</div>');
+                    appendString =
+                        ['<div class="box" id="box-' + user + '" style="display: none">',
+                            '    <div class="textareaHead" id="textareaHead">' + user + '</div>',
+                            '    <div class="textarea scroll" id="responseContent-' + user + '"></div>',
+                            '    <form onSubmit="return false;">',
+                            '        <label>',
+                            '            <textarea class="box_ft" name="message" id="sendTextarea-' + user + '"></textarea>',
+                            '        </label>',
+                            '        <div class="send"><button class="sendButton" onClick="sendMessageToUser(this.form.message.value, currentChatUserId)">发送</button></div>',
+                            '    </form>',
+                            '</div>'].join("");
+                    repeatBox.append(appendString);
+                }
             });
             break;
     }
@@ -115,7 +120,7 @@ function websocket() {
                     if (data.sendUserId != me.userId) {
                     	updateRedPoint(data.sendUserId);
                     }
-                    boxScroll(document.getElementById("responseContent-" + data.sendUserId));
+                    boxScroll(document.getElementById("responseContent-" + data.username));
                     break;
                 
             }
@@ -238,7 +243,7 @@ function GetQueryString(name) {
     const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
     const r = window.location.search.substr(1).match(reg);
     if (r !== null) {
-        return unescape(decodeURI(decodeURI(r[2])));
+        return unescape(decodeURI(r[2]));
     }
     return null;
 }

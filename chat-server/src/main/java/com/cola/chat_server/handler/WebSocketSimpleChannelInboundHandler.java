@@ -1,5 +1,7 @@
 package com.cola.chat_server.handler;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -214,6 +216,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             //否则，执行握手
             Map<String, String> params = RequestParamUtil.urlSplit(request.uri());
             String userId = params.get("userId");
+            userId = URLDecoder.decode(userId);
             Channel channel = ctx.channel();
             NettyAttrUtil.setUserId(channel, userId);
             NettyAttrUtil.refreshLastHeartBeatTime(channel);

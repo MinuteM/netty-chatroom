@@ -37,7 +37,7 @@
                     <textarea id="sendTextarea" class="box_ft" name="message"></textarea>
                 </label>
                 <div class="send">
-                    <button class="sendButton" onClick="sendMessage(this.form.message.value)">发送</button>
+                    <button class="sendButton" id="send" onClick="sendMessage(this.form.message.value)">发送</button>
                 </div>
             </form>
         </div>
@@ -50,5 +50,10 @@
         $('#nick').text(GetQueryString("nick"));
         websocket();
     };
+</script>
+<script language="javascript" for="document" event="onkeydown">
+        if (event.ctrlKey && event.keyCode == 13) {
+            document.getElementById("send").click()
+        }
 </script>
 </html>
