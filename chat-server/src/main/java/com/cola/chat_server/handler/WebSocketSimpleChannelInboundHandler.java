@@ -270,6 +270,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     String method = methodList.get(n);
                     ReflectUtil.invoke(animal, method);
                     jsonObject.put("msg", animal.getMessage());
+                    jsonObject.put("sendTime", DateUtil.now());
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
                 }
             });
