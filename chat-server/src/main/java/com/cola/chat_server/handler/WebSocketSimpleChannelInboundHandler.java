@@ -1,13 +1,17 @@
 package com.cola.chat_server.handler;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.cola.chat_server.model.Animal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +47,10 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 
-
 /**
  * Netty ChannelHandler，用来处理客户端和服务端的会话生命周期事件（握手、建立连接、断开连接、收消息等）
- * @Author 
+ *
+ * @Author
  * @Description 接收请求，接收 WebSocket 信息的控制类
  */
 public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Object> {
@@ -93,13 +97,13 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             String time = DateUtils.date2String(new Date(), "yyyy-MM-dd HH:mm:ss");
             json.put("id", uuid);
             json.put("sendTime", time);
-            
+
             int code = json.getIntValue("code");
             switch (code) {
                 //群聊
                 case MessageCodeConstant.GROUP_CHAT_CODE:
                     //向连接上来的客户端广播消息
-                	SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
+                    SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
                     break;
                 //私聊
                 case MessageCodeConstant.PRIVATE_CHAT_CODE:
@@ -109,21 +113,21 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     String msg = JSONObject.toJSONString(json);
                     // 点对点挨个给接收人发送消息
                     for (Map.Entry<String, Channel> entry : SessionHolder.channelMap.entrySet()) {
-                    	String userId = entry.getKey();
-                    	Channel channel = entry.getValue();
-                		if (receiveUserId.equals(userId)) {
-                			channel.writeAndFlush(new TextWebSocketFrame(msg));
-                		}
+                        String userId = entry.getKey();
+                        Channel channel = entry.getValue();
+                        if (receiveUserId.equals(userId)) {
+                            channel.writeAndFlush(new TextWebSocketFrame(msg));
+                        }
                     }
                     // 如果发给别人，给自己也发一条
                     if (!receiveUserId.equals(sendUserId)) {
-                    	SessionHolder.channelMap.get(sendUserId).writeAndFlush(new TextWebSocketFrame(msg));
+                        SessionHolder.channelMap.get(sendUserId).writeAndFlush(new TextWebSocketFrame(msg));
                     }
                     break;
                 case MessageCodeConstant.SYSTEM_MESSAGE_CODE:
-                	//向连接上来的客户端广播消息
-                	SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
-                	break;
+                    //向连接上来的客户端广播消息
+                    SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
+                    break;
                 //pong
                 case MessageCodeConstant.PONG_CHAT_CODE:
                     Channel channel = ctx.channel();
@@ -131,7 +135,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     NettyAttrUtil.refreshLastHeartBeatTime(channel);
                 default:
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.error("转发消息异常:", e);
             e.printStackTrace();
         }
@@ -193,13 +197,13 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
     /**
      * 处理客户端向服务端发起 http 握手请求的业务
      * WebSocket在建立握手时，数据是通过HTTP传输的。但是建立之后，在真正传输时候是不需要HTTP协议的。
-     *
+     * <p>
      * WebSocket 连接过程：
      * 首先，客户端发起http请求，经过3次握手后，建立起TCP连接；http请求里存放WebSocket支持的版本号等信息，如：Upgrade、Connection、WebSocket-Version等；
      * 然后，服务器收到客户端的握手请求后，同样采用HTTP协议回馈数据；
      * 最后，客户端收到连接成功的消息后，开始借助于TCP传输信道进行全双工通信。
      */
-    private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+    private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest request) throws InterruptedException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
         // 如果请求失败或者该请求不是客户端向服务端发起的 http 请求，则响应错误信息
         if (!request.decoderResult().isSuccess()
                 || !("websocket".equals(request.headers().get("Upgrade")))) {
@@ -220,21 +224,44 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             Channel channel = ctx.channel();
             NettyAttrUtil.setUserId(channel, userId);
             NettyAttrUtil.refreshLastHeartBeatTime(channel);
-        	handshaker.handshake(ctx.channel(), request);
-        	SessionHolder.channelGroup.add(ctx.channel());
-        	SessionHolder.channelMap.put(userId, ctx.channel());
-        	logger.info("握手成功，客户端请求uri：{}", request.uri());
-        	
-        	// 推送用户上线消息，更新客户端在线用户列表
-        	Set<String> userList = SessionHolder.channelMap.keySet();
-        	WsMessage msg = new WsMessage();
-        	Map<String, Object> ext = new HashMap<String, Object>();
-        	ext.put("userList", userList);
-        	msg.setExt(ext);
-        	msg.setCode(MessageCodeConstant.SYSTEM_MESSAGE_CODE);
-        	msg.setType(MessageTypeConstant.UPDATE_USERLIST_SYSTEM_MESSGAE);
-        	SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
-        	
+            handshaker.handshake(ctx.channel(), request);
+            SessionHolder.channelGroup.add(ctx.channel());
+            SessionHolder.channelMap.put(userId, ctx.channel());
+            logger.info("握手成功，客户端请求uri：{}", request.uri());
+
+            // 推送用户上线消息，更新客户端在线用户列表
+            Set<String> userList = SessionHolder.channelMap.keySet();
+            WsMessage msg = new WsMessage();
+            Map<String, Object> ext = new HashMap<String, Object>();
+            ext.put("userList", userList);
+            msg.setExt(ext);
+            msg.setCode(MessageCodeConstant.SYSTEM_MESSAGE_CODE);
+            msg.setType(MessageTypeConstant.UPDATE_USERLIST_SYSTEM_MESSGAE);
+            SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
+
+            for (; ; ) {
+                JSONObject jsonObject = new JSONObject();
+                Animal animal = new Animal();
+                jsonObject.put("msg", animal.getMessage());
+                jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
+                jsonObject.put("username", "系统管理员");
+                jsonObject.put("sendTime", DateUtil.now());
+                SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
+                for (; ; ) {
+                    Thread.sleep(1000);
+                    List<String> methodList = new ArrayList<>();
+                    methodList.add("moveDown");
+                    methodList.add("moveLeft");
+                    methodList.add("moveRight");
+                    methodList.add("moveUp");
+                    Random random = new Random();
+                    int n = random.nextInt(methodList.size());
+                    String method = methodList.get(n);
+                    ReflectUtil.invoke(animal, method);
+                    jsonObject.put("msg", animal.getMessage());
+                    SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
+                }
+            }
         }
     }
 
@@ -254,10 +281,10 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
         //写入请求，服务端向客户端发送数据
         ChannelFuture channelFuture = ctx.channel().writeAndFlush(response);
         if (response.status().code() != 200) {
-        	/**
-        	 * 如果请求失败，关闭 ChannelFuture
-        	 * ChannelFutureListener.CLOSE 源码：future.channel().close();
-        	 */
+            /**
+             * 如果请求失败，关闭 ChannelFuture
+             * ChannelFutureListener.CLOSE 源码：future.channel().close();
+             */
             channelFuture.addListener(ChannelFutureListener.CLOSE);
         }
     }
