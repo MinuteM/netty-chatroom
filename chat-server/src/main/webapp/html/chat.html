@@ -50,10 +50,10 @@
         $('#nick').text(GetQueryString("nick"));
         websocket();
     };
-</script>
-<script language="javascript" for="document" event="onkeydown">
+    document.onkeydown=function(){
         if (event.ctrlKey && event.keyCode == 13) {
             document.getElementById("send").click()
         }
+    }
 </script>
 </html>

@@ -107,12 +107,15 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 case MessageCodeConstant.GROUP_CHAT_CODE:
                     //向连接上来的客户端广播消息
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
-                    Game game = SessionHolder.animalMap.get(json.getString("sendUserId"));
+                    String myUserId = json.getString("sendUserId");
+                    Game game = SessionHolder.animalMap.get(myUserId);
                     if("停止".equals(json.getString("msg"))){
                         game.setStatus(false);
+                        SessionHolder.animalMap.put(myUserId, game);
                     }
                     if("继续".equals(json.getString("msg"))){
                         game.setStatus(true);
+                        SessionHolder.animalMap.put(myUserId, game);
                         Thread thread = new GameThread(game);
                         thread.start();
                     }
