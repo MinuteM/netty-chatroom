@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.cola.chat_server.model.Animal;
+import com.cola.chat_server.model.Game;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -30,5 +31,5 @@ public class SessionHolder {
     /**
      * 用于客户端和服务端握手时存储用户id和animal对应关系
      */
-    public static Map<String, Animal> animalMap = new ConcurrentHashMap<String, Animal>();
+    public static Map<String, Game> animalMap = new ConcurrentHashMap<String, Game>();
 }

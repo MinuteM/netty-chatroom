@@ -12,6 +12,8 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.cola.chat_server.model.Animal;
+import com.cola.chat_server.model.Game;
+import com.cola.chat_server.service.GameThread;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,9 +107,14 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 case MessageCodeConstant.GROUP_CHAT_CODE:
                     //向连接上来的客户端广播消息
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
-                    Animal animal = SessionHolder.animalMap.get(json.getString("sendUserId"));
+                    Game game = SessionHolder.animalMap.get(json.getString("sendUserId"));
                     if("停止".equals(json.getString("msg"))){
-                        animal.setExitFlag(true);
+                        game.setStatus(false);
+                    }
+                    if("继续".equals(json.getString("msg"))){
+                        game.setStatus(true);
+                        Thread thread = new GameThread(game);
+                        thread.start();
                     }
                     break;
                 //私聊
@@ -243,37 +250,14 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             msg.setCode(MessageCodeConstant.SYSTEM_MESSAGE_CODE);
             msg.setType(MessageTypeConstant.UPDATE_USERLIST_SYSTEM_MESSGAE);
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
-
-            String finalUserId = userId;
-            Thread thread = new Thread(() -> {
-                JSONObject jsonObject = new JSONObject();
-                Animal animal = new Animal();
-                SessionHolder.animalMap.put(finalUserId, animal);
-                jsonObject.put("msg", animal.getMessage());
-                jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-                jsonObject.put("username", "系统管理员");
-                jsonObject.put("sendTime", DateUtil.now());
-                SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                while (!animal.getExitFlag()) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    List<String> methodList = new ArrayList<>();
-                    methodList.add("moveDown");
-                    methodList.add("moveLeft");
-                    methodList.add("moveRight");
-                    methodList.add("moveUp");
-                    Random random = new Random();
-                    int n = random.nextInt(methodList.size());
-                    String method = methodList.get(n);
-                    ReflectUtil.invoke(animal, method);
-                    jsonObject.put("msg", animal.getMessage());
-                    jsonObject.put("sendTime", DateUtil.now());
-                    SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                }
-            });
+            //开启一局新游戏
+            Game game = new Game();
+            Animal animal = new Animal();
+            game.setAnimal(animal);
+            game.setStatus(true);
+            game.setUserId(userId);
+            SessionHolder.animalMap.put(userId, game);
+            Thread thread = new GameThread(game);
             thread.start();
         }
     }
