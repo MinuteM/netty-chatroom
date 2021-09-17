@@ -3,6 +3,7 @@ package com.cola.chat_server.util;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.cola.chat_server.model.Animal;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -24,6 +25,10 @@ public class SessionHolder {
     /**
      * 用于客户端和服务端握手时存储用户id和netty Channel对应关系
      */
-    public static Map<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>(); 
+    public static Map<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 
+    /**
+     * 用于客户端和服务端握手时存储用户id和animal对应关系
+     */
+    public static Map<String, Animal> animalMap = new ConcurrentHashMap<String, Animal>();
 }

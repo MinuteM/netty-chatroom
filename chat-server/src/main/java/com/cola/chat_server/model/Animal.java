@@ -17,6 +17,7 @@ public class Animal {
         this.status = "0";
         this.gender = String.valueOf(CommonUtils.randomNum(0, 1));
         this.id = IdWorker.getId();
+        this.exitFlag = false;
         this.wLocation = 0;
         this.hLocation = 0;
         this.message = StrUtil.format("自动生成一只蚂蚁：{}，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
@@ -88,6 +89,11 @@ public class Animal {
      * 纵轴位置
      */
     private int hLocation;
+
+    /**
+     * 退出游戏
+     */
+    private Boolean exitFlag;
 
     /**
      * 向上移动一个单位

@@ -12,6 +12,7 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.cola.chat_server.model.Animal;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +105,10 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 case MessageCodeConstant.GROUP_CHAT_CODE:
                     //向连接上来的客户端广播消息
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
+                    Animal animal = SessionHolder.animalMap.get(json.getString("sendUserId"));
+                    if("停止".equals(json.getString("msg"))){
+                        animal.setExitFlag(true);
+                    }
                     break;
                 //私聊
                 case MessageCodeConstant.PRIVATE_CHAT_CODE:
@@ -239,16 +244,22 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             msg.setType(MessageTypeConstant.UPDATE_USERLIST_SYSTEM_MESSGAE);
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
 
-            for (; ; ) {
+            String finalUserId = userId;
+            Thread thread = new Thread(() -> {
                 JSONObject jsonObject = new JSONObject();
                 Animal animal = new Animal();
+                SessionHolder.animalMap.put(finalUserId, animal);
                 jsonObject.put("msg", animal.getMessage());
                 jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
                 jsonObject.put("username", "系统管理员");
                 jsonObject.put("sendTime", DateUtil.now());
                 SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                for (; ; ) {
-                    Thread.sleep(1000);
+                while (!animal.getExitFlag()) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     List<String> methodList = new ArrayList<>();
                     methodList.add("moveDown");
                     methodList.add("moveLeft");
@@ -261,7 +272,8 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     jsonObject.put("msg", animal.getMessage());
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
                 }
-            }
+            });
+            thread.start();
         }
     }
 
