@@ -1,11 +1,12 @@
 let socket;
-const groupChatName = "群聊室";
+const groupChatName = "炸弹蚁";
 let defaultHeadImg = "../img/dog.png";
 let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;
@@ -32,7 +33,7 @@ function systemMessage(data) {
                 '<div class="chat_item" onClick="chooseUser(null, null)" style="z-index: ">' +
                 '<img class="avatar img-circle" src="../img/chatroom.png" style="height: 50px;width: 50px">' +
                 '<img id="redPoint" class="img-circle" src="../img/redPoint.png" style="height: 10px;width: 10px;position: absolute;left: 60;display: none">' +
-                '<div style="color: white;font-size: large">群聊室</div>' +
+                '<div style="color: white;font-size: large">炸弹蚁</div>' +
                 '</div>');
             users.forEach(function (user) {
                 console.info(GetQueryString('nick'));
@@ -77,19 +78,23 @@ function websocket() {
             switch (data.code) {
                 case GROUP_CHAT_MESSAGE_CODE:
                     if (data.sendUserId !== me.userId) {
+                        // $("#responseContent").append(
+                        //     "   <div class='chatMessageBox'>" +
+                        //     "       <img class='chatAvatar' src='" + defaultHeadImg + "'>" +
+                        //     "       <div class='chatTime'>" + data.username + "&nbsp;&nbsp; " + data.sendTime + "</div>" +
+                        //     "       <div class='chatMessgae'><span>" + data.msg + "</span></div>" +
+                        //     "   </div>");
+                        $("#responseContent").empty();
                         $("#responseContent").append(
-                            "   <div class='chatMessageBox'>" +
-                            "       <img class='chatAvatar' src='" + defaultHeadImg + "'>" +
-                            "       <div class='chatTime'>" + data.username + "&nbsp;&nbsp; " + data.sendTime + "</div>" +
-                            "       <div class='chatMessgae'><span>" + data.msg + "</span></div>" +
-                            "   </div>");
+                            "<input id='ant' readonly type='image' src='../bootstrap/image/Ant.png' style='width: 1em; height: 1em; position:absolute; left: " + data.left + "em;bottom: " + data.bottom + "em'>"
+                        );
                     } else {
-                        $("#responseContent").append(
-                            "   <div class='chatMessageBox_me'>" +
-                            "       <img class='chatAvatar_me' src='" + defaultHeadImg + "'>" +
-                            "       <div class='chatTime'>" + data.sendTime + "&nbsp;&nbsp; " + data.username + "</div>" +
-                            "       <div class='chatMessgae_me'><span>" + data.msg + "</span></div>" +
-                            "   </div>");
+                        // $("#responseContent").append(
+                        //     "   <div class='chatMessageBox_me'>" +
+                        //     "       <img class='chatAvatar_me' src='" + defaultHeadImg + "'>" +
+                        //     "       <div class='chatTime'>" + data.sendTime + "&nbsp;&nbsp; " + data.username + "</div>" +
+                        //     "       <div class='chatMessgae_me'><span>" + data.msg + "</span></div>" +
+                        //     "   </div>");
                     }
                     updateRedPoint(null);
                     boxScroll(document.getElementById("responseContent"));
@@ -120,7 +125,7 @@ function websocket() {
                     if (data.sendUserId != me.userId) {
                     	updateRedPoint(data.sendUserId);
                     }
-                    boxScroll(document.getElementById("responseContent-" + data.username));
+                    // boxScroll(document.getElementById("responseContent-" + data.username));
                     break;
                 
             }

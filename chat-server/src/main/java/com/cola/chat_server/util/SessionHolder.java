@@ -31,5 +31,5 @@ public class SessionHolder {
     /**
      * 用于客户端和服务端握手时存储用户id和animal对应关系
      */
-    public static Map<String, Game> animalMap = new ConcurrentHashMap<String, Game>();
+    public static Map<String, Game> gameMap = new ConcurrentHashMap<String, Game>();
 }

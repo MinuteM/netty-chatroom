@@ -29,10 +29,12 @@ public class GameThread extends Thread {
             jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
             jsonObject.put("username", "系统管理员");
             jsonObject.put("sendTime", DateUtil.now());
+            jsonObject.put("left", animal.getWLocation());
+            jsonObject.put("bottom", animal.getHLocation());
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             while (game.getStatus()) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -47,6 +49,8 @@ public class GameThread extends Thread {
                 ReflectUtil.invoke(animal, method);
                 jsonObject.put("msg", animal.getMessage());
                 jsonObject.put("sendTime", DateUtil.now());
+                jsonObject.put("left", animal.getWLocation());
+                jsonObject.put("bottom", animal.getHLocation());
                 SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             }
         }

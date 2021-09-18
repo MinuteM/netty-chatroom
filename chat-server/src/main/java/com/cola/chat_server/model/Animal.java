@@ -93,6 +93,10 @@ public class Animal {
      * 向上移动一个单位
      */
     public void moveUp() {
+        if(this.hLocation == 33){
+            this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
         this.hLocation++;
         this.message = StrUtil.format("蚂蚁：{}，向上移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
@@ -101,6 +105,10 @@ public class Animal {
      * 向左移动一个单位
      */
     public void moveLeft() {
+        if(this.wLocation == 0){
+            this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
         this.wLocation--;
         this.message = StrUtil.format("蚂蚁：{}，向左移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
@@ -109,6 +117,10 @@ public class Animal {
      * 向右移动一个单位
      */
     public void moveRight() {
+        if(this.wLocation == 49){
+            this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
         this.wLocation++;
         this.message = StrUtil.format("蚂蚁：{}，向右移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
@@ -117,6 +129,10 @@ public class Animal {
      * 向下移动一个单位
      */
     public void moveDown() {
+        if(this.hLocation == 0){
+            this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
         this.hLocation--;
         this.message = StrUtil.format("蚂蚁：{}，向下移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }

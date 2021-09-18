@@ -19,4 +19,9 @@ public class Game {
      * 动物
      */
     private Animal animal;
+
+    /**
+     * 地图
+     */
+    private Map map;
 }
