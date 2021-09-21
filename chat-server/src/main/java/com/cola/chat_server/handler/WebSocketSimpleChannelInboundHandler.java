@@ -113,43 +113,38 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     String myUserId = json.getString("sendUserId");
                     Game game = SessionHolder.game;
                     Animal animal = game.getAnimalMap().get(myUserId);
-                    if("pause".equals(json.getString("msg"))){
+                    if ("pause".equals(json.getString("msg"))) {
                         animal.setMoveStatus(false);
                         SessionHolder.game = game;
-                        game.getAnimalMap().put(myUserId,animal);
+                        game.getAnimalMap().put(myUserId, animal);
                     }
-                    if("continue".equals(json.getString("msg"))){
+                    if ("continue".equals(json.getString("msg"))) {
                         animal.setMoveStatus(true);
                         SessionHolder.game = game;
-                        game.getAnimalMap().put(myUserId,animal);
-                        Thread thread = new GameThread(game);
-                        thread.start();
+                        game.getAnimalMap().put(myUserId, animal);
+                        SessionHolder.cachedThreadPool.execute(new GameThread(game));
                     }
-                    if("left".equals(json.getString("msg"))){
+                    if ("left".equals(json.getString("msg"))) {
                         animal.setMoveStatus(false);
                         animal.moveLeft();
-                        game.getAnimalMap().put(myUserId,animal);
-                        sendMessage(myUserId, game);
+                        move(myUserId, game, animal);
                     }
-                    if("right".equals(json.getString("msg"))){
+                    if ("right".equals(json.getString("msg"))) {
                         animal.setMoveStatus(false);
                         animal.moveRight();
-                        game.getAnimalMap().put(myUserId,animal);
-                        sendMessage(myUserId, game);
+                        move(myUserId, game, animal);
                     }
-                    if("up".equals(json.getString("msg"))){
+                    if ("up".equals(json.getString("msg"))) {
                         animal.setMoveStatus(false);
                         animal.moveUp();
-                        game.getAnimalMap().put(myUserId,animal);
-                        sendMessage(myUserId, game);
+                        move(myUserId, game, animal);
                     }
-                    if("down".equals(json.getString("msg"))){
+                    if ("down".equals(json.getString("msg"))) {
                         animal.setMoveStatus(false);
                         animal.moveDown();
-                        game.getAnimalMap().put(myUserId,animal);
-                        sendMessage(myUserId, game);
+                        move(myUserId, game, animal);
                     }
-                    if("bomb".equals(json.getString("msg"))){
+                    if ("bomb".equals(json.getString("msg"))) {
                         Point point = new Point();
                         point.setLeft(animal.getWLocation());
                         point.setBottom(animal.getHLocation());
@@ -158,9 +153,20 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                         bomb.setPoint(point);
                         bomb.setUserId(myUserId);
                         game.getBombList().add(bomb);
-                        Thread thread = new BombThread(bomb);
-                        thread.start();
+                        SessionHolder.cachedThreadPool.execute(new BombThread(bomb));
                         sendMessage(myUserId, game);
+                    }
+                    if ("restart".equals(json.getString("msg"))) {
+                        //开启一局新游戏
+                        game = new Game();
+                        GameMap gameMap = new GameMap();
+                        gameMap.setWidth(SessionHolder.width);
+                        gameMap.setHeight(SessionHolder.height);
+                        game.setMap(gameMap);
+                        animal = new Animal();
+                        game.getAnimalMap().put(myUserId, animal);
+                        SessionHolder.game = game;
+                        SessionHolder.cachedThreadPool.execute(new GameThread(game));
                     }
                     break;
                 //私聊
@@ -199,6 +205,17 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
         }
     }
 
+    private void move(String myUserId, Game game, Animal animal) {
+        for (Bomb bomb1 : game.getBoomList()) {
+            if (animal.getHLocation().equals(bomb1.getPoint().getBottom()) && animal.getWLocation().equals(bomb1.getPoint().getLeft())) {
+                // 被炸到
+                game.setDead(StrUtil.format("{}被{}炸死了", myUserId, bomb1.getUserId()));
+            }
+        }
+        game.getAnimalMap().put(myUserId, animal);
+        sendMessage(myUserId, game);
+    }
+
     private void sendMessage(String myUserId, Game game) {
         Animal animal = game.getAnimalMap().get(myUserId);
         JSONObject jsonObject = new JSONObject();
@@ -209,7 +226,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
         jsonObject.put("game", game);
         log.info(JSONUtil.toJsonStr(game));
         SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-        SessionHolder.game.getAnimalMap().put(myUserId,animal);
+        SessionHolder.game.getAnimalMap().put(myUserId, animal);
     }
 
     /**
@@ -311,7 +328,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
             //看看缓存能不能拿到
             Game game = SessionHolder.game;
-            if(ObjectUtil.isEmpty(game)){
+            if (ObjectUtil.isEmpty(game)) {
                 //开启一局新游戏
                 game = new Game();
                 GameMap gameMap = new GameMap();
@@ -319,19 +336,18 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 gameMap.setHeight(SessionHolder.height);
                 game.setMap(gameMap);
                 Animal animal = new Animal();
-                game.getAnimalMap().put(userId,animal);
+                game.getAnimalMap().put(userId, animal);
 //                game.setStatus(true);
                 SessionHolder.game = game;
             } else {
-              // 存在一局游戏但是玩家没有角色，创建一个角色
+                // 存在一局游戏但是玩家没有角色，创建一个角色
                 Animal animal = game.getAnimalMap().get(userId);
-                if(ObjectUtil.isEmpty(animal)){
+                if (ObjectUtil.isEmpty(animal)) {
                     animal = new Animal();
                     SessionHolder.game.getAnimalMap().put(userId, animal);
                 }
             }
-            Thread thread = new GameThread(game);
-            thread.start();
+            SessionHolder.cachedThreadPool.execute(new GameThread(game));
         }
     }
 

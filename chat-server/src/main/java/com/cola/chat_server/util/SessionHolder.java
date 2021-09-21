@@ -2,6 +2,8 @@ package com.cola.chat_server.util;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.cola.chat_server.model.Animal;
 import com.cola.chat_server.model.Game;
@@ -42,4 +44,25 @@ public class SessionHolder {
      * 地图长
      */
     public static Integer height = 29;
+
+    /**
+     * 炸弹爆炸时间
+     */
+    public static Integer bombTime = 3000;
+
+    /**
+     * 爆炸痕迹时间
+     */
+    public static Integer boomTime = 1000;
+
+    /**
+     * 炸弹威力
+     */
+    public static Integer power = 5;
+
+    /**
+     * 线程池
+     */
+    public static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+
 }

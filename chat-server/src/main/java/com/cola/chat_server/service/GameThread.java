@@ -2,6 +2,7 @@ package com.cola.chat_server.service;
 
 import com.cola.chat_server.model.Animal;
 import com.cola.chat_server.model.Game;
+import com.cola.chat_server.util.SessionHolder;
 
 import java.util.Map;
 
@@ -18,8 +19,7 @@ public class GameThread extends Thread {
             Map<String, Animal> animalMap = game.getAnimalMap();
             animalMap.forEach(
                     (id, ant) -> {
-                        Thread thread = new AnimalThread(game, ant);
-                        thread.start();
+                        SessionHolder.cachedThreadPool.execute(new AnimalThread(game, ant));
                     }
             );
         }

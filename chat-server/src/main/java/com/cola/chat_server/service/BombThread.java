@@ -37,7 +37,7 @@ public class BombThread extends Thread {
             jsonObject.put("game", game);
 //            SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             try {
-                Thread.sleep(5000);
+                Thread.sleep(SessionHolder.bombTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -49,13 +49,13 @@ public class BombThread extends Thread {
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             // 爆炸效果
             List<Bomb> boomList = game.getBoomList();
-            boomList.addAll(createBoom(3, bomb, jsonObject));
+            boomList.addAll(createBoom(SessionHolder.power, bomb, jsonObject));
             game.setBoomList(boomList);
             jsonObject.put("game", game);
             SessionHolder.game = game;
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             try {
-                Thread.sleep(1000);
+                Thread.sleep(SessionHolder.boomTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

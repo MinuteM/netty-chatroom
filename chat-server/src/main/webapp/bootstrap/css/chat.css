@@ -185,7 +185,7 @@
 }
 
 .scroll {
-    overflow-y: scroll;
+    overflow: hidden;
 }
 
 ::-webkit-scrollbar-track-piece {

@@ -74,7 +74,7 @@ function websocket() {
         socket = new WebSocket(webSocketUrl);
         socket.onmessage = function (event) {
             let data = JSON.parse(event.data);
-            console.log(JSON.stringify(data));
+            // console.log(JSON.stringify(data));
             switch (data.code) {
                 case GROUP_CHAT_MESSAGE_CODE:
                     if (data.sendUserId !== me.userId) {
@@ -96,7 +96,7 @@ function websocket() {
                             $("#responseContent").append(
                                 "<input id='ant" + key + "' readonly type='image' src='../bootstrap/image/ant.png' style='width: 1em; height: 1em; position:absolute; left: " + value.wLocation + "em;bottom: " + value.hLocation + "em'>"
                             );
-                            console.log(map[key]);
+                            // console.log(map[key]);
                         }
                         var bombList = data.game.bombList;
                         for (var index in bombList) {
@@ -105,7 +105,7 @@ function websocket() {
                             $("#responseContent").append(
                                 "<input id='bomb" + index + "' readonly type='image' src='../bootstrap/image/bomb.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
                             );
-                            console.log(map[key]);
+                            // console.log(map[key]);
                         }
                         var boomList = data.game.boomList;
                         for (var index in boomList) {
@@ -114,7 +114,7 @@ function websocket() {
                             $("#responseContent").append(
                                 "<input id='boom" + index + "' readonly type='image' src='../bootstrap/image/boom.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
                             );
-                            console.log(map[key]);
+                            // console.log(map[key]);
                         }
                         $("#responseContent").append(
                             "<text style='position:absolute; left: 0em;bottom: 0em'>" + data.game.dead + "</text>"
