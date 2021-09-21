@@ -5,8 +5,8 @@ let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
-// const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;
@@ -90,6 +90,18 @@ function websocket() {
                         // if(documentAnt != null || documentAnt != undefined){
                         //     document.getElementById(thisId).remove();
                         // }
+
+                        var pointList = data.game.map.pointList;
+                        for (var index in pointList) {
+                            var value = pointList[index];
+                            var left = value.left;
+                            var bottom = value.bottom;
+                            $("#responseContent").append(
+                                "<input id='point" + index + "' readonly type='image' src='../bootstrap/image/ground.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
+                            );
+                            // console.log(map[key]);
+                        }
+
                         var map = data.game.animalMap;
                         for (var key in map) {
                             var value = map[key];

@@ -100,8 +100,13 @@ public class Animal {
      * 向上移动一个单位
      */
     public void moveUp() {
-        if(this.hLocation == SessionHolder.height){
+        if (this.hLocation == SessionHolder.height) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
+        Integer left = this.wLocation;
+        Integer bottom = this.hLocation;
+        if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom + 1)).count() > 0) {
             return;
         }
         this.hLocation++;
@@ -112,8 +117,13 @@ public class Animal {
      * 向左移动一个单位
      */
     public void moveLeft() {
-        if(this.wLocation == 0){
+        if (this.wLocation == 0) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
+        Integer left = this.wLocation;
+        Integer bottom = this.hLocation;
+        if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left - 1) && item.getBottom().equals(bottom)).count() > 0) {
             return;
         }
         this.wLocation--;
@@ -124,8 +134,13 @@ public class Animal {
      * 向右移动一个单位
      */
     public void moveRight() {
-        if(this.wLocation == SessionHolder.width){
+        if (this.wLocation == SessionHolder.width) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
+        Integer left = this.wLocation;
+        Integer bottom = this.hLocation;
+        if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left + 1) && item.getBottom().equals(bottom)).count() > 0) {
             return;
         }
         this.wLocation++;
@@ -136,8 +151,13 @@ public class Animal {
      * 向下移动一个单位
      */
     public void moveDown() {
-        if(this.hLocation == 0){
+        if (this.hLocation == 0) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+            return;
+        }
+        Integer left = this.wLocation;
+        Integer bottom = this.hLocation;
+        if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom - 1)).count() > 0) {
             return;
         }
         this.hLocation--;

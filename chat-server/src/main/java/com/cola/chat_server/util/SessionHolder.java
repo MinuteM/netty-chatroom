@@ -65,4 +65,9 @@ public class SessionHolder {
      */
     public static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
+    /**
+     * 最大炸弹数量
+     */
+    public static Integer maxBomb = 5;
+
 }

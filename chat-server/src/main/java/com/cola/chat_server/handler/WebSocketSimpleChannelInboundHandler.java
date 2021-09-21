@@ -145,23 +145,24 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                         move(myUserId, game, animal);
                     }
                     if ("bomb".equals(json.getString("msg"))) {
-                        Point point = new Point();
-                        point.setLeft(animal.getWLocation());
-                        point.setBottom(animal.getHLocation());
-                        Bomb bomb = new Bomb();
-                        bomb.setId(IdWorker.getId());
-                        bomb.setPoint(point);
-                        bomb.setUserId(myUserId);
-                        game.getBombList().add(bomb);
-                        SessionHolder.cachedThreadPool.execute(new BombThread(bomb));
-                        sendMessage(myUserId, game);
+                        //超过最大数量不能放
+                        if (game.getBombList().stream().filter(item -> item.getUserId().equals(myUserId)).count() < SessionHolder.maxBomb) {
+                            Point point = new Point();
+                            point.setLeft(animal.getWLocation());
+                            point.setBottom(animal.getHLocation());
+                            Bomb bomb = new Bomb();
+                            bomb.setId(IdWorker.getId());
+                            bomb.setPoint(point);
+                            bomb.setUserId(myUserId);
+                            game.getBombList().add(bomb);
+                            SessionHolder.cachedThreadPool.execute(new BombThread(bomb));
+                            sendMessage(myUserId, game);
+                        }
                     }
                     if ("restart".equals(json.getString("msg"))) {
                         //开启一局新游戏
                         game = new Game();
                         GameMap gameMap = new GameMap();
-                        gameMap.setWidth(SessionHolder.width);
-                        gameMap.setHeight(SessionHolder.height);
                         game.setMap(gameMap);
                         animal = new Animal();
                         game.getAnimalMap().put(myUserId, animal);
@@ -224,7 +225,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
         jsonObject.put("username", "系统管理员");
         jsonObject.put("sendTime", DateUtil.now());
         jsonObject.put("game", game);
-        log.info(JSONUtil.toJsonStr(game));
+//        log.info(JSONUtil.toJsonStr(game));
         SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
         SessionHolder.game.getAnimalMap().put(myUserId, animal);
     }
@@ -332,8 +333,6 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 //开启一局新游戏
                 game = new Game();
                 GameMap gameMap = new GameMap();
-                gameMap.setWidth(SessionHolder.width);
-                gameMap.setHeight(SessionHolder.height);
                 game.setMap(gameMap);
                 Animal animal = new Animal();
                 game.getAnimalMap().put(userId, animal);
