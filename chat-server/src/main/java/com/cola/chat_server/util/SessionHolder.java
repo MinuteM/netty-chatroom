@@ -32,4 +32,14 @@ public class SessionHolder {
      * 服务器上只有一局游戏，先作为缓存
      */
     public static Game game;
+
+    /**
+     * 地图长
+     */
+    public static Integer width = 49;
+
+    /**
+     * 地图长
+     */
+    public static Integer height = 29;
 }

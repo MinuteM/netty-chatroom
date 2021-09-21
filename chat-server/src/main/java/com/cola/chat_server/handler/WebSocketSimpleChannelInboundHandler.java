@@ -12,10 +12,12 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.cola.chat_server.model.Animal;
-import com.cola.chat_server.model.Game;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.cola.chat_server.model.*;
+import com.cola.chat_server.service.BombThread;
 import com.cola.chat_server.service.GameThread;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +25,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.cola.chat_server.constant.MessageCodeConstant;
 import com.cola.chat_server.constant.MessageTypeConstant;
 import com.cola.chat_server.constant.WebSocketConstant;
-import com.cola.chat_server.model.WsMessage;
 import com.cola.chat_server.service.WebSocketInfoService;
 import com.cola.chat_server.util.DateUtils;
 import com.cola.chat_server.util.NettyAttrUtil;
@@ -57,6 +58,7 @@ import io.netty.util.CharsetUtil;
  * @Author
  * @Description 接收请求，接收 WebSocket 信息的控制类
  */
+@Slf4j
 public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketSimpleChannelInboundHandler.class);
@@ -114,10 +116,12 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     if("pause".equals(json.getString("msg"))){
                         animal.setMoveStatus(false);
                         SessionHolder.game = game;
+                        game.getAnimalMap().put(myUserId,animal);
                     }
                     if("continue".equals(json.getString("msg"))){
                         animal.setMoveStatus(true);
                         SessionHolder.game = game;
+                        game.getAnimalMap().put(myUserId,animal);
                         Thread thread = new GameThread(game);
                         thread.start();
                     }
@@ -143,6 +147,19 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                         animal.setMoveStatus(false);
                         animal.moveDown();
                         game.getAnimalMap().put(myUserId,animal);
+                        sendMessage(myUserId, game);
+                    }
+                    if("bomb".equals(json.getString("msg"))){
+                        Point point = new Point();
+                        point.setLeft(animal.getWLocation());
+                        point.setBottom(animal.getHLocation());
+                        Bomb bomb = new Bomb();
+                        bomb.setId(IdWorker.getId());
+                        bomb.setPoint(point);
+                        bomb.setUserId(myUserId);
+                        game.getBombList().add(bomb);
+                        Thread thread = new BombThread(bomb);
+                        thread.start();
                         sendMessage(myUserId, game);
                     }
                     break;
@@ -190,6 +207,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
         jsonObject.put("username", "系统管理员");
         jsonObject.put("sendTime", DateUtil.now());
         jsonObject.put("game", game);
+        log.info(JSONUtil.toJsonStr(game));
         SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
         SessionHolder.game.getAnimalMap().put(myUserId,animal);
     }
@@ -296,6 +314,10 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             if(ObjectUtil.isEmpty(game)){
                 //开启一局新游戏
                 game = new Game();
+                GameMap gameMap = new GameMap();
+                gameMap.setWidth(SessionHolder.width);
+                gameMap.setHeight(SessionHolder.height);
+                game.setMap(gameMap);
                 Animal animal = new Animal();
                 game.getAnimalMap().put(userId,animal);
 //                game.setStatus(true);

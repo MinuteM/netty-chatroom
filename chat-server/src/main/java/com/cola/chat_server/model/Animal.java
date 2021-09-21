@@ -3,6 +3,7 @@ package com.cola.chat_server.model;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.cola.chat_server.constant.CommonUtils;
+import com.cola.chat_server.util.SessionHolder;
 import lombok.Data;
 
 /**
@@ -78,7 +79,7 @@ public class Animal {
     /**
      * 横轴位置
      */
-    private int wLocation;
+    private Integer wLocation;
 
     /**
      * 消息
@@ -88,7 +89,7 @@ public class Animal {
     /**
      * 纵轴位置
      */
-    private int hLocation;
+    private Integer hLocation;
 
     /**
      * 自动移动
@@ -99,7 +100,7 @@ public class Animal {
      * 向上移动一个单位
      */
     public void moveUp() {
-        if(this.hLocation == 33){
+        if(this.hLocation == SessionHolder.height){
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
         }
@@ -123,7 +124,7 @@ public class Animal {
      * 向右移动一个单位
      */
     public void moveRight() {
-        if(this.wLocation == 49){
+        if(this.wLocation == SessionHolder.width){
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
         }

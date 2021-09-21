@@ -24,7 +24,7 @@ function systemMessage(data) {
         case TYPE_UPDATE_USERLIST_SYSTEM_MESSGAE:
             let users = data.ext.userList;
             $('#userCount').text("在线人数：" + users.length);
-            
+
             let userList = $("#userList");
             let repeatBox = $("#repeatBox");
             let appendString;
@@ -39,7 +39,7 @@ function systemMessage(data) {
                 console.info(GetQueryString('nick'));
                 user = unescape(decodeURI(user))
                 console.info(user);
-                if(user != GetQueryString('nick')){
+                if (user != GetQueryString('nick')) {
                     userList.append(
                         '<div class="chat_item" onClick="chooseUser(\'' + user + '\',\'' + user + '\')">' +
                         '<img class="avatar img-circle" src=' + defaultHeadImg + ' style="height: 50px;width: 50px">' +
@@ -65,8 +65,8 @@ function systemMessage(data) {
 }
 
 function websocket() {
-	me = new Object();
-	me.userId = GetQueryString('nick')
+    me = new Object();
+    me.userId = GetQueryString('nick')
     if (!window.WebSocket) {
         window.WebSocket = window.MozWebSocket;
     }
@@ -94,10 +94,31 @@ function websocket() {
                         for (var key in map) {
                             var value = map[key];
                             $("#responseContent").append(
-                                "<input id='ant"+key+"' readonly type='image' src='../bootstrap/image/Ant.png' style='width: 1em; height: 1em; position:absolute; left: " + value.wLocation + "em;bottom: " + value.hLocation + "em'>"
+                                "<input id='ant" + key + "' readonly type='image' src='../bootstrap/image/ant.png' style='width: 1em; height: 1em; position:absolute; left: " + value.wLocation + "em;bottom: " + value.hLocation + "em'>"
                             );
                             console.log(map[key]);
                         }
+                        var bombList = data.game.bombList;
+                        for (var index in bombList) {
+                            var left = bombList[index].point.left;
+                            var bottom = bombList[index].point.bottom;
+                            $("#responseContent").append(
+                                "<input id='bomb" + index + "' readonly type='image' src='../bootstrap/image/bomb.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
+                            );
+                            console.log(map[key]);
+                        }
+                        var boomList = data.game.boomList;
+                        for (var index in boomList) {
+                            var left = boomList[index].point.left;
+                            var bottom = boomList[index].point.bottom;
+                            $("#responseContent").append(
+                                "<input id='boom" + index + "' readonly type='image' src='../bootstrap/image/boom.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
+                            );
+                            console.log(map[key]);
+                        }
+                        $("#responseContent").append(
+                            "<text style='position:absolute; left: 0em;bottom: 0em'>" + data.game.dead + "</text>"
+                        );
                     } else {
                         // $("#responseContent").append(
                         //     "   <div class='chatMessageBox_me'>" +
@@ -114,8 +135,8 @@ function websocket() {
                     boxScroll(document.getElementById("responseContent"));
                     break;
                 case PING_MESSAGE_CODE:
-                	sendPong();
-                	break;
+                    sendPong();
+                    break;
                 case PRIVATE_CHAT_MESSAGE_CODE:
                     if (data.sendUserId !== me.userId) {
                         $("#responseContent-" + data.sendUserId).append(
@@ -133,11 +154,11 @@ function websocket() {
                             "   </div>");
                     }
                     if (data.sendUserId != me.userId) {
-                    	updateRedPoint(data.sendUserId);
+                        updateRedPoint(data.sendUserId);
                     }
                     // boxScroll(document.getElementById("responseContent-" + data.username));
                     break;
-                
+
             }
         };
         socket.onopen = function () {
