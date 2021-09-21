@@ -8,7 +8,7 @@ import java.util.List;
  * 地图对象
  */
 @Data
-public class Map {
+public class GameMap {
 
     private Integer width;
 

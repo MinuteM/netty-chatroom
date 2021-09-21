@@ -109,72 +109,41 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     //向连接上来的客户端广播消息
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(json)));
                     String myUserId = json.getString("sendUserId");
-                    Game game = SessionHolder.gameMap.get(myUserId);
+                    Game game = SessionHolder.game;
+                    Animal animal = game.getAnimalMap().get(myUserId);
                     if("pause".equals(json.getString("msg"))){
-                        game.setStatus(false);
-                        SessionHolder.gameMap.put(myUserId, game);
+                        animal.setMoveStatus(false);
+                        SessionHolder.game = game;
                     }
                     if("continue".equals(json.getString("msg"))){
-                        game.setStatus(true);
-                        SessionHolder.gameMap.put(myUserId, game);
+                        animal.setMoveStatus(true);
+                        SessionHolder.game = game;
                         Thread thread = new GameThread(game);
                         thread.start();
                     }
                     if("left".equals(json.getString("msg"))){
-                        game.setStatus(false);
-                        Animal animal = game.getAnimal();
+                        animal.setMoveStatus(false);
                         animal.moveLeft();
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("msg", animal.getMessage());
-                        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-                        jsonObject.put("username", "系统管理员");
-                        jsonObject.put("sendTime", DateUtil.now());
-                        jsonObject.put("left", animal.getWLocation());
-                        jsonObject.put("bottom", animal.getHLocation());
-                        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                        SessionHolder.gameMap.put(myUserId, game);
+                        game.getAnimalMap().put(myUserId,animal);
+                        sendMessage(myUserId, game);
                     }
                     if("right".equals(json.getString("msg"))){
-                        game.setStatus(false);
-                        Animal animal = game.getAnimal();
+                        animal.setMoveStatus(false);
                         animal.moveRight();
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("msg", animal.getMessage());
-                        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-                        jsonObject.put("username", "系统管理员");
-                        jsonObject.put("sendTime", DateUtil.now());
-                        jsonObject.put("left", animal.getWLocation());
-                        jsonObject.put("bottom", animal.getHLocation());
-                        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                        SessionHolder.gameMap.put(myUserId, game);
+                        game.getAnimalMap().put(myUserId,animal);
+                        sendMessage(myUserId, game);
                     }
                     if("up".equals(json.getString("msg"))){
-                        game.setStatus(false);
-                        Animal animal = game.getAnimal();
+                        animal.setMoveStatus(false);
                         animal.moveUp();
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("msg", animal.getMessage());
-                        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-                        jsonObject.put("username", "系统管理员");
-                        jsonObject.put("sendTime", DateUtil.now());
-                        jsonObject.put("left", animal.getWLocation());
-                        jsonObject.put("bottom", animal.getHLocation());
-                        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                        SessionHolder.gameMap.put(myUserId, game);
+                        game.getAnimalMap().put(myUserId,animal);
+                        sendMessage(myUserId, game);
                     }
                     if("down".equals(json.getString("msg"))){
-                        game.setStatus(false);
-                        Animal animal = game.getAnimal();
+                        animal.setMoveStatus(false);
                         animal.moveDown();
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("msg", animal.getMessage());
-                        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-                        jsonObject.put("username", "系统管理员");
-                        jsonObject.put("sendTime", DateUtil.now());
-                        jsonObject.put("left", animal.getWLocation());
-                        jsonObject.put("bottom", animal.getHLocation());
-                        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-                        SessionHolder.gameMap.put(myUserId, game);
+                        game.getAnimalMap().put(myUserId,animal);
+                        sendMessage(myUserId, game);
                     }
                     break;
                 //私聊
@@ -211,6 +180,18 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             logger.error("转发消息异常:", e);
             e.printStackTrace();
         }
+    }
+
+    private void sendMessage(String myUserId, Game game) {
+        Animal animal = game.getAnimalMap().get(myUserId);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("msg", animal.getMessage());
+        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
+        jsonObject.put("username", "系统管理员");
+        jsonObject.put("sendTime", DateUtil.now());
+        jsonObject.put("game", game);
+        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
+        SessionHolder.game.getAnimalMap().put(myUserId,animal);
     }
 
     /**
@@ -311,15 +292,21 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             msg.setType(MessageTypeConstant.UPDATE_USERLIST_SYSTEM_MESSGAE);
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(msg)));
             //看看缓存能不能拿到
-            Game game = SessionHolder.gameMap.get(userId);
+            Game game = SessionHolder.game;
             if(ObjectUtil.isEmpty(game)){
                 //开启一局新游戏
                 game = new Game();
                 Animal animal = new Animal();
-                game.setAnimal(animal);
-                game.setStatus(true);
-                game.setUserId(userId);
-                SessionHolder.gameMap.put(userId, game);
+                game.getAnimalMap().put(userId,animal);
+//                game.setStatus(true);
+                SessionHolder.game = game;
+            } else {
+              // 存在一局游戏但是玩家没有角色，创建一个角色
+                Animal animal = game.getAnimalMap().get(userId);
+                if(ObjectUtil.isEmpty(animal)){
+                    animal = new Animal();
+                    SessionHolder.game.getAnimalMap().put(userId, animal);
+                }
             }
             Thread thread = new GameThread(game);
             thread.start();

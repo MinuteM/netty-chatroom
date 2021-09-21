@@ -5,8 +5,8 @@ let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
-const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;
@@ -85,9 +85,19 @@ function websocket() {
                         //     "       <div class='chatMessgae'><span>" + data.msg + "</span></div>" +
                         //     "   </div>");
                         $("#responseContent").empty();
-                        $("#responseContent").append(
-                            "<input id='ant' readonly type='image' src='../bootstrap/image/Ant.png' style='width: 1em; height: 1em; position:absolute; left: " + data.left + "em;bottom: " + data.bottom + "em'>"
-                        );
+                        // var thisId = "ant"+me.userId;
+                        // var documentAnt = document.getElementById(thisId);
+                        // if(documentAnt != null || documentAnt != undefined){
+                        //     document.getElementById(thisId).remove();
+                        // }
+                        var map = data.game.animalMap;
+                        for (var key in map) {
+                            var value = map[key];
+                            $("#responseContent").append(
+                                "<input id='ant"+key+"' readonly type='image' src='../bootstrap/image/Ant.png' style='width: 1em; height: 1em; position:absolute; left: " + value.wLocation + "em;bottom: " + value.hLocation + "em'>"
+                            );
+                            console.log(map[key]);
+                        }
                     } else {
                         // $("#responseContent").append(
                         //     "   <div class='chatMessageBox_me'>" +

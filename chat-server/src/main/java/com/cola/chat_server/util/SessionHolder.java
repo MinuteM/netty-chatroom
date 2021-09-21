@@ -29,7 +29,7 @@ public class SessionHolder {
     public static Map<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 
     /**
-     * 用于客户端和服务端握手时存储用户id和animal对应关系
+     * 服务器上只有一局游戏，先作为缓存
      */
-    public static Map<String, Game> gameMap = new ConcurrentHashMap<String, Game>();
+    public static Game game;
 }

@@ -19,6 +19,7 @@ public class Animal {
         this.id = IdWorker.getId();
         this.wLocation = 0;
         this.hLocation = 0;
+        this.moveStatus = true;
         this.message = StrUtil.format("自动生成一只蚂蚁：{}，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
 
@@ -88,6 +89,11 @@ public class Animal {
      * 纵轴位置
      */
     private int hLocation;
+
+    /**
+     * 自动移动
+     */
+    private Boolean moveStatus;
 
     /**
      * 向上移动一个单位
