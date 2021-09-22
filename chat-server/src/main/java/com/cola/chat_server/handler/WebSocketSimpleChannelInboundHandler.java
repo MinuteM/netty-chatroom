@@ -16,6 +16,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.cola.chat_server.model.*;
 import com.cola.chat_server.service.BombThread;
 import com.cola.chat_server.service.GameThread;
+import com.cola.chat_server.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -26,10 +27,6 @@ import com.cola.chat_server.constant.MessageCodeConstant;
 import com.cola.chat_server.constant.MessageTypeConstant;
 import com.cola.chat_server.constant.WebSocketConstant;
 import com.cola.chat_server.service.WebSocketInfoService;
-import com.cola.chat_server.util.DateUtils;
-import com.cola.chat_server.util.NettyAttrUtil;
-import com.cola.chat_server.util.RequestParamUtil;
-import com.cola.chat_server.util.SessionHolder;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -146,28 +143,10 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     }
                     if ("bomb".equals(json.getString("msg"))) {
                         //超过最大数量不能放
-                        if (game.getBombList().stream().filter(item -> item.getUserId().equals(myUserId)).count() < SessionHolder.maxBomb) {
-                            Point point = new Point();
-                            point.setLeft(animal.getWLocation());
-                            point.setBottom(animal.getHLocation());
-                            Bomb bomb = new Bomb();
-                            bomb.setId(IdWorker.getId());
-                            bomb.setPoint(point);
-                            bomb.setUserId(myUserId);
-                            game.getBombList().add(bomb);
-                            SessionHolder.cachedThreadPool.execute(new BombThread(bomb));
-                            sendMessage(myUserId, game);
-                        }
+                        ActiveUtils.createBomb(myUserId, game, animal);
                     }
                     if ("restart".equals(json.getString("msg"))) {
-                        //开启一局新游戏
-                        game = new Game();
-                        GameMap gameMap = new GameMap();
-                        game.setMap(gameMap);
-                        animal = new Animal();
-                        game.getAnimalMap().put(myUserId, animal);
-                        SessionHolder.game = game;
-                        SessionHolder.cachedThreadPool.execute(new GameThread(game));
+                        ActiveUtils.createGame(myUserId);
                     }
                     break;
                 //私聊
@@ -214,20 +193,7 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             }
         }
         game.getAnimalMap().put(myUserId, animal);
-        sendMessage(myUserId, game);
-    }
-
-    private void sendMessage(String myUserId, Game game) {
-        Animal animal = game.getAnimalMap().get(myUserId);
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("msg", animal.getMessage());
-        jsonObject.put("code", MessageCodeConstant.GROUP_CHAT_CODE);
-        jsonObject.put("username", "系统管理员");
-        jsonObject.put("sendTime", DateUtil.now());
-        jsonObject.put("game", game);
-//        log.info(JSONUtil.toJsonStr(game));
-        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
-        SessionHolder.game.getAnimalMap().put(myUserId, animal);
+        ActiveUtils.sendMessage(myUserId, game);
     }
 
     /**
@@ -330,19 +296,13 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
             //看看缓存能不能拿到
             Game game = SessionHolder.game;
             if (ObjectUtil.isEmpty(game)) {
-                //开启一局新游戏
-                game = new Game();
-                GameMap gameMap = new GameMap();
-                game.setMap(gameMap);
-                Animal animal = new Animal();
-                game.getAnimalMap().put(userId, animal);
-//                game.setStatus(true);
-                SessionHolder.game = game;
+                ActiveUtils.createGame(userId);
             } else {
                 // 存在一局游戏但是玩家没有角色，创建一个角色
                 Animal animal = game.getAnimalMap().get(userId);
                 if (ObjectUtil.isEmpty(animal)) {
                     animal = new Animal();
+                    game.getRecordList().put(userId, 0);
                     SessionHolder.game.getAnimalMap().put(userId, animal);
                 }
             }

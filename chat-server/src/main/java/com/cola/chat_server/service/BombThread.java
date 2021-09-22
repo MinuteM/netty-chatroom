@@ -13,6 +13,7 @@ import com.cola.chat_server.util.SessionHolder;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.springframework.context.annotation.Bean;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -43,14 +44,23 @@ public class BombThread extends Thread {
             }
             jsonObject.put("msg", StrUtil.format("{}的炸弹爆炸了", bomb.getUserId()));
             jsonObject.put("sendTime", DateUtil.now());
-            game.setBombList(game.getBombList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
+            synchronized (game) {
+                try {
+                    game.setBombList(game.getBombList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
+                } catch (NullPointerException | ConcurrentModificationException e) {
+                    game.setBombList(new CopyOnWriteArrayList<>());
+                }
+            }
+            SessionHolder.game.getAnimalMap().get(bomb.getUserId()).setLastBomb(SessionHolder.game.getAnimalMap().get(bomb.getUserId()).getLastBomb() + 1);
             jsonObject.put("game", game);
             SessionHolder.game = game;
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             // 爆炸效果
-            List<Bomb> boomList = game.getBoomList();
-            boomList.addAll(createBoom(SessionHolder.power, bomb, jsonObject));
-            game.setBoomList(boomList);
+            synchronized (game) {
+                List<Bomb> boomList = game.getBoomList();
+                boomList.addAll(createBoom(SessionHolder.power, bomb, jsonObject));
+                game.setBoomList(boomList);
+            }
             jsonObject.put("game", game);
             SessionHolder.game = game;
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
@@ -59,60 +69,95 @@ public class BombThread extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            game.setBoomList(game.getBoomList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
+            synchronized (game) {
+                try {
+                    game.setBoomList(game.getBoomList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
+                } catch (NullPointerException | ConcurrentModificationException e) {
+                    game.setBoomList(new CopyOnWriteArrayList<>());
+                }
+            }
             jsonObject.put("game", game);
             SessionHolder.game = game;
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
         }
     }
 
-    private List<Bomb> createBoom(Integer range, Bomb bomb, JSONObject jsonObject) {
+    private synchronized List<Bomb> createBoom(Integer range, Bomb bomb, JSONObject jsonObject) {
         //同时判定死亡
+        //如果炸到墙，这个方向就不需要往后增加爆炸效果了
+        Boolean up = true;
+        Boolean down = true;
+        Boolean left = true;
+        Boolean right = true;
         List<Bomb> bombList = new CopyOnWriteArrayList<>();
+        List<Point> pointList = SessionHolder.game.getMap().getPointList();
         for (int i = 1; i <= range; i++) {
-            Bomb bomb1 = new Bomb();
-            BeanUtil.copyProperties(bomb, bomb1);
-            Point point1 = new Point();
-            BeanUtil.copyProperties(bomb.getPoint(), point1);
-            Integer num1 = point1.getLeft() - i;
-            point1.setLeft(num1);
-            bomb1.setPoint(point1);
-
-            Bomb bomb2 = new Bomb();
-            BeanUtil.copyProperties(bomb, bomb2);
-            Point point2 = new Point();
-            BeanUtil.copyProperties(bomb.getPoint(), point2);
-            Integer num2 = point2.getLeft() + i;
-            point2.setLeft(num2);
-            bomb2.setPoint(point2);
-
-            Bomb bomb3 = new Bomb();
-            BeanUtil.copyProperties(bomb, bomb3);
-            Point point3 = new Point();
-            BeanUtil.copyProperties(bomb.getPoint(), point3);
-            Integer num3 = point3.getBottom() - i;
-            point3.setBottom(num3);
-            bomb3.setPoint(point3);
-
-            Bomb bomb4 = new Bomb();
-            BeanUtil.copyProperties(bomb, bomb4);
-            Point point4 = new Point();
-            BeanUtil.copyProperties(bomb.getPoint(), point4);
-            Integer num4 = point4.getBottom() + i;
-            point4.setBottom(num4);
-            bomb4.setPoint(point4);
-
-            if(point1.getLeft() >=0 && point1.getLeft() <= SessionHolder.width && point1.getBottom() >= 0 && point1.getBottom() <= SessionHolder.height){
-                bombList.add(bomb1);
+            if (left) {
+                Bomb bomb1 = new Bomb();
+                BeanUtil.copyProperties(bomb, bomb1);
+                Point point1 = new Point();
+                BeanUtil.copyProperties(bomb.getPoint(), point1);
+                Integer num1 = point1.getLeft() - i;
+                point1.setLeft(num1);
+                bomb1.setPoint(point1);
+                if (point1.getLeft() >= 0 && point1.getLeft() <= SessionHolder.width && point1.getBottom() >= 0 && point1.getBottom() <= SessionHolder.height) {
+                    bombList.add(bomb1);
+                }
+                if (pointList.contains(point1)) {
+                    left = false;
+                    bombList.remove(bomb1);
+                }
             }
-            if(point2.getLeft() >=0 && point2.getLeft() <= SessionHolder.width && point2.getBottom() >= 0 && point2.getBottom() <= SessionHolder.height){
-                bombList.add(bomb2);
+
+            if (right) {
+                Bomb bomb2 = new Bomb();
+                BeanUtil.copyProperties(bomb, bomb2);
+                Point point2 = new Point();
+                BeanUtil.copyProperties(bomb.getPoint(), point2);
+                Integer num2 = point2.getLeft() + i;
+                point2.setLeft(num2);
+                bomb2.setPoint(point2);
+                if (point2.getLeft() >= 0 && point2.getLeft() <= SessionHolder.width && point2.getBottom() >= 0 && point2.getBottom() <= SessionHolder.height) {
+                    bombList.add(bomb2);
+                }
+                if (pointList.contains(point2)) {
+                    right = false;
+                    bombList.remove(bomb2);
+                }
             }
-            if(point3.getLeft() >=0 && point3.getLeft() <= SessionHolder.width && point3.getBottom() >= 0 && point3.getBottom() <= SessionHolder.height){
-                bombList.add(bomb3);
+
+            if (down) {
+                Bomb bomb3 = new Bomb();
+                BeanUtil.copyProperties(bomb, bomb3);
+                Point point3 = new Point();
+                BeanUtil.copyProperties(bomb.getPoint(), point3);
+                Integer num3 = point3.getBottom() - i;
+                point3.setBottom(num3);
+                bomb3.setPoint(point3);
+                if (point3.getLeft() >= 0 && point3.getLeft() <= SessionHolder.width && point3.getBottom() >= 0 && point3.getBottom() <= SessionHolder.height) {
+                    bombList.add(bomb3);
+                }
+                if (pointList.contains(point3)) {
+                    down = false;
+                    bombList.remove(bomb3);
+                }
             }
-            if(point4.getLeft() >=0 && point4.getLeft() <= SessionHolder.width && point4.getBottom() >= 0 && point4.getBottom() <= SessionHolder.height){
-                bombList.add(bomb4);
+
+            if (up) {
+                Bomb bomb4 = new Bomb();
+                BeanUtil.copyProperties(bomb, bomb4);
+                Point point4 = new Point();
+                BeanUtil.copyProperties(bomb.getPoint(), point4);
+                Integer num4 = point4.getBottom() + i;
+                point4.setBottom(num4);
+                bomb4.setPoint(point4);
+                if (point4.getLeft() >= 0 && point4.getLeft() <= SessionHolder.width && point4.getBottom() >= 0 && point4.getBottom() <= SessionHolder.height) {
+                    bombList.add(bomb4);
+                }
+                if (pointList.contains(point4)) {
+                    up = false;
+                    bombList.remove(bomb4);
+                }
             }
         }
         bombList.add(bomb);
@@ -123,6 +168,9 @@ public class BombThread extends Thread {
                     // 被炸到
                     Game game = SessionHolder.game;
                     game.setDead(StrUtil.format("{}被{}炸死了", key, bomb1.getUserId()));
+                    if (!key.equals(bomb1.getUserId())) {
+                        SessionHolder.game.getRecordList().put(bomb1.getUserId(), SessionHolder.game.getRecordList().get(bomb1.getUserId()) + 1);
+                    }
                     jsonObject.put("game", game);
                     SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
                 }

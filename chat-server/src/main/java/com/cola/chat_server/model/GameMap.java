@@ -4,6 +4,7 @@ import com.cola.chat_server.util.SessionHolder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -36,18 +37,17 @@ public class GameMap {
             point.setLeft(this.width + 1);
             this.pointList.add(point);
         }
-        for (int i = 10; i < 30 + 1; i++) {
-            Point point = new Point();
-            point.setBottom(20);
-            point.setLeft(i);
-            this.pointList.add(point);
-        }
-
-        for (int i = 10; i < 30 + 1; i++) {
-            Point point = new Point();
-            point.setBottom(10);
-            point.setLeft(i);
-            this.pointList.add(point);
+        for (int i = 0; i < this.width; i++) {
+            for (int j = 0; j < this.height; j++) {
+                Random random = new Random();
+                int flag = random.nextInt(10);
+                if (flag == 0) {
+                    Point point = new Point();
+                    point.setLeft(i);
+                    point.setBottom(j);
+                    this.pointList.add(point);
+                }
+            }
         }
     }
 

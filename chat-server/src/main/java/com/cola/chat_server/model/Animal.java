@@ -6,6 +6,8 @@ import com.cola.chat_server.constant.CommonUtils;
 import com.cola.chat_server.util.SessionHolder;
 import lombok.Data;
 
+import java.util.Random;
+
 /**
  * 游戏中所有生物的父类
  */
@@ -18,8 +20,28 @@ public class Animal {
         this.status = "0";
         this.gender = String.valueOf(CommonUtils.randomNum(0, 1));
         this.id = IdWorker.getId();
-        this.wLocation = 0;
-        this.hLocation = 0;
+        this.lastBomb = SessionHolder.maxBomb;
+        // 随机位置
+        Random random = new Random();
+        Integer x = random.nextInt(SessionHolder.width);
+        Integer y = random.nextInt(SessionHolder.height);
+        for (; ; ) {
+            Boolean flag = false;
+            for (Point point : SessionHolder.game.getMap().getPointList()) {
+                if (point.getLeft().equals(x) && point.getBottom().equals(y)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                break;
+            } else {
+                x = random.nextInt(SessionHolder.width);
+                y = random.nextInt(SessionHolder.height);
+            }
+        }
+        this.wLocation = x;
+        this.hLocation = y;
         this.moveStatus = true;
         this.message = StrUtil.format("自动生成一只蚂蚁：{}，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
@@ -97,16 +119,24 @@ public class Animal {
     private Boolean moveStatus;
 
     /**
+     * 剩余炸弹数
+     */
+    private Integer lastBomb;
+
+    /**
      * 向上移动一个单位
      */
-    public void moveUp() {
-        if (this.hLocation == SessionHolder.height) {
+    public synchronized void moveUp() {
+        if (this.hLocation.equals(SessionHolder.height)) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
         }
         Integer left = this.wLocation;
         Integer bottom = this.hLocation;
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom + 1)).count() > 0) {
+            return;
+        }
+        if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left) && item.getPoint().getBottom().equals(bottom + 1)).count() > 0) {
             return;
         }
         this.hLocation++;
@@ -116,7 +146,7 @@ public class Animal {
     /**
      * 向左移动一个单位
      */
-    public void moveLeft() {
+    public synchronized void moveLeft() {
         if (this.wLocation == 0) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
@@ -126,6 +156,9 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left - 1) && item.getBottom().equals(bottom)).count() > 0) {
             return;
         }
+        if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left - 1) && item.getPoint().getBottom().equals(bottom)).count() > 0) {
+            return;
+        }
         this.wLocation--;
         this.message = StrUtil.format("蚂蚁：{}，向左移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
@@ -133,14 +166,17 @@ public class Animal {
     /**
      * 向右移动一个单位
      */
-    public void moveRight() {
-        if (this.wLocation == SessionHolder.width) {
+    public synchronized void moveRight() {
+        if (this.wLocation.equals(SessionHolder.width)) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
         }
         Integer left = this.wLocation;
         Integer bottom = this.hLocation;
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left + 1) && item.getBottom().equals(bottom)).count() > 0) {
+            return;
+        }
+        if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left + 1) && item.getPoint().getBottom().equals(bottom)).count() > 0) {
             return;
         }
         this.wLocation++;
@@ -150,7 +186,7 @@ public class Animal {
     /**
      * 向下移动一个单位
      */
-    public void moveDown() {
+    public synchronized void moveDown() {
         if (this.hLocation == 0) {
             this.message = StrUtil.format("蚂蚁：{}，触碰边界无法移动，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
             return;
@@ -158,6 +194,9 @@ public class Animal {
         Integer left = this.wLocation;
         Integer bottom = this.hLocation;
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom - 1)).count() > 0) {
+            return;
+        }
+        if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left) && item.getPoint().getBottom().equals(bottom - 1)).count() > 0) {
             return;
         }
         this.hLocation--;

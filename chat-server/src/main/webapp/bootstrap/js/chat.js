@@ -5,8 +5,8 @@ let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
-const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;
@@ -90,6 +90,15 @@ function websocket() {
                         // if(documentAnt != null || documentAnt != undefined){
                         //     document.getElementById(thisId).remove();
                         // }
+                        var recordList = data.game.recordList;
+                        var count = 1;
+                        var top = data.game.map.height;
+                        for (var key in recordList) {
+                            $("#responseContent").append(
+                                "<text style='position:absolute; left: 0em;bottom: " + (top - count) + "em'>" + key + "：" + recordList[key] + "</text>"
+                            );
+                            count++;
+                        }
 
                         var pointList = data.game.map.pointList;
                         for (var index in pointList) {

@@ -2,7 +2,6 @@ package com.cola.chat_server.model;
 
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,4 +39,9 @@ public class Game {
      * 死亡讯息
      */
     private String dead = "无人死亡";
+
+    /**
+     * 记分牌
+     */
+    private Map<String,Integer> recordList = new ConcurrentHashMap<>();
 }
