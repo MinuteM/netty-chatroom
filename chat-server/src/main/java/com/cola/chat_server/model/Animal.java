@@ -6,6 +6,7 @@ import com.cola.chat_server.constant.CommonUtils;
 import com.cola.chat_server.util.SessionHolder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -33,6 +34,12 @@ public class Animal {
                     break;
                 }
             }
+            for (Point point : SessionHolder.game.getMap().getFixPointList()) {
+                if (point.getLeft().equals(x) && point.getBottom().equals(y)) {
+                    flag = true;
+                    break;
+                }
+            }
             if (!flag) {
                 break;
             } else {
@@ -43,6 +50,7 @@ public class Animal {
         this.wLocation = x;
         this.hLocation = y;
         this.moveStatus = true;
+        this.patchNum = 0;
         this.message = StrUtil.format("自动生成一只蚂蚁：{}，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
 
@@ -124,6 +132,11 @@ public class Animal {
     private Integer lastBomb;
 
     /**
+     * 碎片数量
+     */
+    private Integer patchNum;
+
+    /**
      * 向上移动一个单位
      */
     public synchronized void moveUp() {
@@ -136,10 +149,21 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom + 1)).count() > 0) {
             return;
         }
+        if (SessionHolder.game.getMap().getFixPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom + 1)).count() > 0) {
+            return;
+        }
         if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left) && item.getPoint().getBottom().equals(bottom + 1)).count() > 0) {
             return;
         }
         this.hLocation++;
+        List<Point> patchList = SessionHolder.game.getMap().getPatchList();
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation);
+        if (patchList.contains(point)) {
+            patchList.remove(point);
+            this.patchNum++;
+        }
         this.message = StrUtil.format("蚂蚁：{}，向上移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
 
@@ -156,10 +180,21 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left - 1) && item.getBottom().equals(bottom)).count() > 0) {
             return;
         }
+        if (SessionHolder.game.getMap().getFixPointList().stream().filter(item -> item.getLeft().equals(left - 1) && item.getBottom().equals(bottom)).count() > 0) {
+            return;
+        }
         if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left - 1) && item.getPoint().getBottom().equals(bottom)).count() > 0) {
             return;
         }
         this.wLocation--;
+        List<Point> patchList = SessionHolder.game.getMap().getPatchList();
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation);
+        if (patchList.contains(point)) {
+            patchList.remove(point);
+            this.patchNum++;
+        }
         this.message = StrUtil.format("蚂蚁：{}，向左移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
 
@@ -176,10 +211,21 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left + 1) && item.getBottom().equals(bottom)).count() > 0) {
             return;
         }
+        if (SessionHolder.game.getMap().getFixPointList().stream().filter(item -> item.getLeft().equals(left + 1) && item.getBottom().equals(bottom)).count() > 0) {
+            return;
+        }
         if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left + 1) && item.getPoint().getBottom().equals(bottom)).count() > 0) {
             return;
         }
         this.wLocation++;
+        List<Point> patchList = SessionHolder.game.getMap().getPatchList();
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation);
+        if (patchList.contains(point)) {
+            patchList.remove(point);
+            this.patchNum++;
+        }
         this.message = StrUtil.format("蚂蚁：{}，向右移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
     }
 
@@ -196,11 +242,186 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom - 1)).count() > 0) {
             return;
         }
+        if (SessionHolder.game.getMap().getFixPointList().stream().filter(item -> item.getLeft().equals(left) && item.getBottom().equals(bottom - 1)).count() > 0) {
+            return;
+        }
         if (SessionHolder.game.getBombList().stream().filter(item -> item.getPoint().getLeft().equals(left) && item.getPoint().getBottom().equals(bottom - 1)).count() > 0) {
             return;
         }
         this.hLocation--;
+        List<Point> patchList = SessionHolder.game.getMap().getPatchList();
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation);
+        if (patchList.contains(point)) {
+            patchList.remove(point);
+            this.patchNum++;
+        }
         this.message = StrUtil.format("蚂蚁：{}，向下移动一个单位，当前位置({},{})", this.getName(), String.valueOf(this.getWLocation()), String.valueOf(this.getHLocation()));
+    }
+
+    /**
+     * 在左边放墙
+     */
+    public synchronized void leftWall() {
+        //原来没有墙，没有固定墙，没有碎片，没有蚂蚁，没有炸弹
+        Point point = new Point();
+        point.setLeft(this.wLocation - 1);
+        point.setBottom(this.hLocation);
+        if (this.patchNum < 1) {
+            return;
+        }
+        if (point.getLeft() < 0 || point.getBottom() < 0) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPointList().contains(point)) {
+            return;
+        }
+        SessionHolder.game.getAnimalMap().forEach(
+                (key, value) -> {
+                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getBombList().forEach(
+                item -> {
+                    if (item.getPoint().equals(point)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getMap().getPointList().add(point);
+        this.patchNum--;
+    }
+
+    /**
+     * 在右边放墙
+     */
+    public synchronized void rightWall() {
+        //原来没有墙，没有固定墙，没有碎片，没有蚂蚁，没有炸弹
+        Point point = new Point();
+        point.setLeft(this.wLocation + 1);
+        point.setBottom(this.hLocation);
+        if (this.patchNum < 1) {
+            return;
+        }
+        if (point.getLeft() < 0 || point.getBottom() < 0) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPointList().contains(point)) {
+            return;
+        }
+        SessionHolder.game.getAnimalMap().forEach(
+                (key, value) -> {
+                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getBombList().forEach(
+                item -> {
+                    if (item.getPoint().equals(point)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getMap().getPointList().add(point);
+        this.patchNum--;
+    }
+
+    /**
+     * 在上边放墙
+     */
+    public synchronized void upWall() {
+        //原来没有墙，没有固定墙，没有碎片，没有蚂蚁，没有炸弹
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation + 1);
+        if (this.patchNum < 1) {
+            return;
+        }
+        if (point.getLeft() < 0 || point.getBottom() < 0) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPointList().contains(point)) {
+            return;
+        }
+        SessionHolder.game.getAnimalMap().forEach(
+                (key, value) -> {
+                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getBombList().forEach(
+                item -> {
+                    if (item.getPoint().equals(point)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getMap().getPointList().add(point);
+        this.patchNum--;
+    }
+
+    /**
+     * 在下边放墙
+     */
+    public synchronized void downWall() {
+        //原来没有墙，没有固定墙，没有碎片，没有蚂蚁，没有炸弹
+        Point point = new Point();
+        point.setLeft(this.wLocation);
+        point.setBottom(this.hLocation - 1);
+        if (this.patchNum < 1) {
+            return;
+        }
+        if (point.getLeft() < 0 || point.getBottom() < 0) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
+            return;
+        }
+        if (SessionHolder.game.getMap().getPointList().contains(point)) {
+            return;
+        }
+        SessionHolder.game.getAnimalMap().forEach(
+                (key, value) -> {
+                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getBombList().forEach(
+                item -> {
+                    if (item.getPoint().equals(point)) {
+                        return;
+                    }
+                }
+        );
+        SessionHolder.game.getMap().getPointList().add(point);
+        this.patchNum--;
     }
 }
 

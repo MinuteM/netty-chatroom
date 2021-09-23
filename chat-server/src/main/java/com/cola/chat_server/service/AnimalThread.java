@@ -44,7 +44,7 @@ public class AnimalThread extends Thread {
             SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             while (animal.getMoveStatus()) {
                 try {
-                    Thread.sleep(300);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -86,6 +86,8 @@ public class AnimalThread extends Thread {
 
                 List<Point> pointList = SessionHolder.game.getMap().getPointList();
 
+                List<Point> fixPointList = SessionHolder.game.getMap().getFixPointList();
+
                 try {
                     // 预判炸弹未来爆炸point
                     game.getBombList().forEach(
@@ -109,6 +111,10 @@ public class AnimalThread extends Thread {
                                             left = false;
                                             boomList.remove(bomb1);
                                         }
+                                        if (fixPointList.contains(p1)) {
+                                            left = false;
+                                            boomList.remove(bomb1);
+                                        }
                                     }
 
                                     if (right) {
@@ -121,6 +127,10 @@ public class AnimalThread extends Thread {
                                             boomList.add(bomb2);
                                         }
                                         if (pointList.contains(p2)) {
+                                            right = false;
+                                            boomList.remove(bomb2);
+                                        }
+                                        if (fixPointList.contains(p2)) {
                                             right = false;
                                             boomList.remove(bomb2);
                                         }
@@ -139,6 +149,10 @@ public class AnimalThread extends Thread {
                                             down = false;
                                             boomList.remove(bomb3);
                                         }
+                                        if (fixPointList.contains(p3)) {
+                                            down = false;
+                                            boomList.remove(bomb3);
+                                        }
                                     }
 
                                     if (up) {
@@ -151,6 +165,10 @@ public class AnimalThread extends Thread {
                                             boomList.add(bomb4);
                                         }
                                         if (pointList.contains(p4)) {
+                                            up = false;
+                                            boomList.remove(bomb4);
+                                        }
+                                        if (fixPointList.contains(p4)) {
                                             up = false;
                                             boomList.remove(bomb4);
                                         }
@@ -180,6 +198,22 @@ public class AnimalThread extends Thread {
 
                 try {
                     SessionHolder.game.getMap().getPointList().forEach(
+                            item -> {
+                                fourPointList.forEach(
+                                        (method, fourPoint) -> {
+                                            if (item.equals(fourPoint)) {
+                                                methodList.remove(method);
+                                            }
+                                        }
+                                );
+                            }
+                    );
+                } catch (ConcurrentModificationException e) {
+                    // todo
+                }
+
+                try {
+                    SessionHolder.game.getMap().getFixPointList().forEach(
                             item -> {
                                 fourPointList.forEach(
                                         (method, fourPoint) -> {
@@ -228,6 +262,25 @@ public class AnimalThread extends Thread {
                 Boolean m = random.nextInt(5) == 0;
                 if (m && methodList.size() > 0) {
                     ActiveUtils.createBomb(userId, game, animal);
+                }
+                // 随机放墙
+                Boolean n = random.nextInt(5) == 0;
+                List<String> methodList1 = new CopyOnWriteArrayList<>();
+                methodList1.add("downWall");
+                methodList1.add("leftWall");
+                methodList1.add("rightWall");
+                methodList1.add("upWall");
+
+                if (n && methodList.size() > 0) {
+                    int k = random.nextInt(methodList1.size());
+                    String method = methodList1.get(k);
+                    jsonObject.put("game", game);
+                    SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
+                    try {
+                        ReflectUtil.invoke(animal, method);
+                    } catch (UtilException e) {
+                        // todo
+                    }
                 }
             }
         }

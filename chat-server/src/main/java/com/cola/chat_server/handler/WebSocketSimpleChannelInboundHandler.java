@@ -148,6 +148,30 @@ public class WebSocketSimpleChannelInboundHandler extends SimpleChannelInboundHa
                     if ("restart".equals(json.getString("msg"))) {
                         ActiveUtils.createGame(myUserId);
                     }
+                    if ("leftWall".equals(json.getString("msg"))) {
+                        animal.setMoveStatus(false);
+                        animal.leftWall();
+                        game.getAnimalMap().put(myUserId, animal);
+                        ActiveUtils.sendMessage(myUserId, game);
+                    }
+                    if ("rightWall".equals(json.getString("msg"))) {
+                        animal.setMoveStatus(false);
+                        animal.rightWall();
+                        game.getAnimalMap().put(myUserId, animal);
+                        ActiveUtils.sendMessage(myUserId, game);
+                    }
+                    if ("upWall".equals(json.getString("msg"))) {
+                        animal.setMoveStatus(false);
+                        animal.upWall();
+                        game.getAnimalMap().put(myUserId, animal);
+                        ActiveUtils.sendMessage(myUserId, game);
+                    }
+                    if ("downWall".equals(json.getString("msg"))) {
+                        animal.setMoveStatus(false);
+                        animal.downWall();
+                        game.getAnimalMap().put(myUserId, animal);
+                        ActiveUtils.sendMessage(myUserId, game);
+                    }
                     break;
                 //私聊
                 case MessageCodeConstant.PRIVATE_CHAT_CODE:

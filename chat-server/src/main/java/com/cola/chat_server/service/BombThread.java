@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+/**
+ * @author linxinyu
+ */
 public class BombThread extends Thread {
     private Bomb bomb;
 
@@ -36,7 +39,6 @@ public class BombThread extends Thread {
             jsonObject.put("username", "系统管理员");
             jsonObject.put("sendTime", DateUtil.now());
             jsonObject.put("game", game);
-//            SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
             try {
                 Thread.sleep(SessionHolder.bombTime);
             } catch (InterruptedException e) {
@@ -91,6 +93,7 @@ public class BombThread extends Thread {
         Boolean right = true;
         List<Bomb> bombList = new CopyOnWriteArrayList<>();
         List<Point> pointList = SessionHolder.game.getMap().getPointList();
+        List<Point> fixPointList = SessionHolder.game.getMap().getFixPointList();
         for (int i = 1; i <= range; i++) {
             if (left) {
                 Bomb bomb1 = new Bomb();
@@ -104,6 +107,12 @@ public class BombThread extends Thread {
                     bombList.add(bomb1);
                 }
                 if (pointList.contains(point1)) {
+                    left = false;
+                    bombList.remove(bomb1);
+                    SessionHolder.game.getMap().getPointList().remove(bomb1.getPoint());
+                    SessionHolder.game.getMap().getPatchList().add(bomb1.getPoint());
+                }
+                if (fixPointList.contains(point1)) {
                     left = false;
                     bombList.remove(bomb1);
                 }
@@ -123,6 +132,12 @@ public class BombThread extends Thread {
                 if (pointList.contains(point2)) {
                     right = false;
                     bombList.remove(bomb2);
+                    SessionHolder.game.getMap().getPointList().remove(bomb2.getPoint());
+                    SessionHolder.game.getMap().getPatchList().add(bomb2.getPoint());
+                }
+                if (fixPointList.contains(point2)) {
+                    right = false;
+                    bombList.remove(bomb2);
                 }
             }
 
@@ -140,6 +155,12 @@ public class BombThread extends Thread {
                 if (pointList.contains(point3)) {
                     down = false;
                     bombList.remove(bomb3);
+                    SessionHolder.game.getMap().getPointList().remove(bomb3.getPoint());
+                    SessionHolder.game.getMap().getPatchList().add(bomb3.getPoint());
+                }
+                if (fixPointList.contains(point3)) {
+                    down = false;
+                    bombList.remove(bomb3);
                 }
             }
 
@@ -155,6 +176,12 @@ public class BombThread extends Thread {
                     bombList.add(bomb4);
                 }
                 if (pointList.contains(point4)) {
+                    up = false;
+                    bombList.remove(bomb4);
+                    SessionHolder.game.getMap().getPointList().remove(bomb4.getPoint());
+                    SessionHolder.game.getMap().getPatchList().add(bomb4.getPoint());
+                }
+                if (fixPointList.contains(point4)) {
                     up = false;
                     bombList.remove(bomb4);
                 }

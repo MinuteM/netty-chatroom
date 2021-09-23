@@ -5,8 +5,8 @@ let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
-// const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;
@@ -111,6 +111,28 @@ function websocket() {
                             // console.log(map[key]);
                         }
 
+                        var fixPointList = data.game.map.fixPointList;
+                        for (var index in fixPointList) {
+                            var value = fixPointList[index];
+                            var left = value.left;
+                            var bottom = value.bottom;
+                            $("#responseContent").append(
+                                "<input id='fixPoint" + index + "' readonly type='image' src='../bootstrap/image/brick.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
+                            );
+                            // console.log(map[key]);
+                        }
+
+                        var patchList = data.game.map.patchList;
+                        for (var index in patchList) {
+                            var value = patchList[index];
+                            var left = value.left;
+                            var bottom = value.bottom;
+                            $("#responseContent").append(
+                                "<input id='patch" + index + "' readonly type='image' src='../bootstrap/image/patch.png' style='width: 1em; height: 1em; position:absolute; left: " + left + "em;bottom: " + bottom + "em'>"
+                            );
+                            // console.log(map[key]);
+                        }
+
                         var map = data.game.animalMap;
                         for (var key in map) {
                             var value = map[key];
@@ -137,8 +159,20 @@ function websocket() {
                             );
                             // console.log(map[key]);
                         }
+
+                        var patchNum = 0;
+                        for (var key in map) {
+                            if(key == me.userId){
+                                var value = map[key];
+                                patchNum = value.patchNum;
+                            }
+                        }
                         $("#responseContent").append(
-                            "<text style='position:absolute; left: 0em;bottom: 0em'>" + data.game.dead + "</text>"
+                            "<text style='position:absolute; left: 0em;bottom: 0em'>碎片数量：" + patchNum + "</text>"
+                        );
+
+                        $("#responseContent").append(
+                            "<text style='position:absolute; left: 0em;bottom: 1em'>" + data.game.dead + "</text>"
                         );
                     } else {
                         // $("#responseContent").append(
