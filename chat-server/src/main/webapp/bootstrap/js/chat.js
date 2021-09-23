@@ -5,8 +5,8 @@ let currentChatUserNick = groupChatName;
 let currentChatUserId;
 
 const myNick = GetQueryString("nick");
-// const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
-const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
+const webSocketUrl = "ws://localhost:7979/websocket?userId=" + myNick;
+// const webSocketUrl = "ws://8.130.162.208:7979/websocket?userId=" + myNick;
 let me;
 
 const GROUP_CHAT_MESSAGE_CODE = 2;

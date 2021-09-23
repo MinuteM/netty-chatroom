@@ -268,37 +268,7 @@ public class Animal {
         Point point = new Point();
         point.setLeft(this.wLocation - 1);
         point.setBottom(this.hLocation);
-        if (this.patchNum < 1) {
-            return;
-        }
-        if (point.getLeft() < 0 || point.getBottom() < 0) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPointList().contains(point)) {
-            return;
-        }
-        SessionHolder.game.getAnimalMap().forEach(
-                (key, value) -> {
-                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getBombList().forEach(
-                item -> {
-                    if (item.getPoint().equals(point)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getMap().getPointList().add(point);
-        this.patchNum--;
+        createWall(point);
     }
 
     /**
@@ -309,37 +279,7 @@ public class Animal {
         Point point = new Point();
         point.setLeft(this.wLocation + 1);
         point.setBottom(this.hLocation);
-        if (this.patchNum < 1) {
-            return;
-        }
-        if (point.getLeft() < 0 || point.getBottom() < 0) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPointList().contains(point)) {
-            return;
-        }
-        SessionHolder.game.getAnimalMap().forEach(
-                (key, value) -> {
-                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getBombList().forEach(
-                item -> {
-                    if (item.getPoint().equals(point)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getMap().getPointList().add(point);
-        this.patchNum--;
+        createWall(point);
     }
 
     /**
@@ -350,37 +290,7 @@ public class Animal {
         Point point = new Point();
         point.setLeft(this.wLocation);
         point.setBottom(this.hLocation + 1);
-        if (this.patchNum < 1) {
-            return;
-        }
-        if (point.getLeft() < 0 || point.getBottom() < 0) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPatchList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getFixPointList().contains(point)) {
-            return;
-        }
-        if (SessionHolder.game.getMap().getPointList().contains(point)) {
-            return;
-        }
-        SessionHolder.game.getAnimalMap().forEach(
-                (key, value) -> {
-                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getBombList().forEach(
-                item -> {
-                    if (item.getPoint().equals(point)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getMap().getPointList().add(point);
-        this.patchNum--;
+        createWall(point);
     }
 
     /**
@@ -391,6 +301,10 @@ public class Animal {
         Point point = new Point();
         point.setLeft(this.wLocation);
         point.setBottom(this.hLocation - 1);
+        createWall(point);
+    }
+
+    private void createWall(Point point) {
         if (this.patchNum < 1) {
             return;
         }
@@ -406,22 +320,26 @@ public class Animal {
         if (SessionHolder.game.getMap().getPointList().contains(point)) {
             return;
         }
-        SessionHolder.game.getAnimalMap().forEach(
-                (key, value) -> {
-                    if (value.getWLocation().equals(this.wLocation) && value.getHLocation().equals(this.hLocation)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getBombList().forEach(
-                item -> {
-                    if (item.getPoint().equals(point)) {
-                        return;
-                    }
-                }
-        );
-        SessionHolder.game.getMap().getPointList().add(point);
-        this.patchNum--;
+        boolean flag = true;
+        for (Animal value : SessionHolder.game.getAnimalMap().values()) {
+            Point point1 = new Point();
+            point1.setBottom(value.getHLocation());
+            point1.setLeft(value.getWLocation());
+            if (point1.equals(point)) {
+                flag = false;
+                return;
+            }
+        }
+        for (Bomb bomb : SessionHolder.game.getBombList()) {
+            if (bomb.getPoint().equals(point)) {
+                flag = false;
+                return;
+            }
+        }
+        if (flag) {
+            SessionHolder.game.getMap().getPointList().add(point);
+            this.patchNum--;
+        }
     }
 }
 

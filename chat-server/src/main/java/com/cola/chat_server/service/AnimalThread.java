@@ -74,13 +74,13 @@ public class AnimalThread extends Thread {
                 point3.setBottom(y);
                 fourPointList.put("moveRight", point3);
 
-                List<String> methodList = new CopyOnWriteArrayList<>();
+                List<String> methodList = new ArrayList<>();
                 methodList.add("moveDown");
                 methodList.add("moveLeft");
                 methodList.add("moveRight");
                 methodList.add("moveUp");
 
-                List<Bomb> boomList = new CopyOnWriteArrayList<>();
+                List<Bomb> boomList = new LinkedList<>();
 
                 boomList.addAll(SessionHolder.game.getBoomList());
 
@@ -265,7 +265,7 @@ public class AnimalThread extends Thread {
                 }
                 // 随机放墙
                 Boolean n = random.nextInt(5) == 0;
-                List<String> methodList1 = new CopyOnWriteArrayList<>();
+                List<String> methodList1 = new ArrayList<>();
                 methodList1.add("downWall");
                 methodList1.add("leftWall");
                 methodList1.add("rightWall");

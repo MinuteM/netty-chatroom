@@ -3,6 +3,8 @@ package com.cola.chat_server.model;
 import com.cola.chat_server.util.SessionHolder;
 import lombok.Data;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,7 +22,7 @@ public class GameMap {
     /**
      * 障碍物
      */
-    private List<Point> pointList = new CopyOnWriteArrayList<>();
+    private List<Point> pointList = Collections.synchronizedList(new LinkedList<>());
 
     /**
      * 固定障碍物
@@ -30,7 +32,7 @@ public class GameMap {
     /**
      * 土块碎片
      */
-    private List<Point> patchList = new CopyOnWriteArrayList<>();
+    private List<Point> patchList = Collections.synchronizedList(new LinkedList<>());
 
     public GameMap() {
         this.width = SessionHolder.width;

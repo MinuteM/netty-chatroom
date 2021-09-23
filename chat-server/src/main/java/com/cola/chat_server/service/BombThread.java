@@ -11,11 +11,8 @@ import com.cola.chat_server.model.Game;
 import com.cola.chat_server.model.Point;
 import com.cola.chat_server.util.SessionHolder;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.springframework.context.annotation.Bean;
 
-import java.util.ConcurrentModificationException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -50,7 +47,7 @@ public class BombThread extends Thread {
                 try {
                     game.setBombList(game.getBombList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
                 } catch (NullPointerException | ConcurrentModificationException e) {
-                    game.setBombList(new CopyOnWriteArrayList<>());
+                    game.setBombList(Collections.synchronizedList(new LinkedList<>()));
                 }
             }
             SessionHolder.game.getAnimalMap().get(bomb.getUserId()).setLastBomb(SessionHolder.game.getAnimalMap().get(bomb.getUserId()).getLastBomb() + 1);
@@ -75,7 +72,7 @@ public class BombThread extends Thread {
                 try {
                     game.setBoomList(game.getBoomList().stream().filter(item -> !item.getId().equals(bomb.getId())).collect(Collectors.toList()));
                 } catch (NullPointerException | ConcurrentModificationException e) {
-                    game.setBoomList(new CopyOnWriteArrayList<>());
+                    game.setBoomList(Collections.synchronizedList(new LinkedList<>()));
                 }
             }
             jsonObject.put("game", game);
@@ -91,7 +88,7 @@ public class BombThread extends Thread {
         Boolean down = true;
         Boolean left = true;
         Boolean right = true;
-        List<Bomb> bombList = new CopyOnWriteArrayList<>();
+        List<Bomb> bombList = Collections.synchronizedList(new LinkedList<>());
         List<Point> pointList = SessionHolder.game.getMap().getPointList();
         List<Point> fixPointList = SessionHolder.game.getMap().getFixPointList();
         for (int i = 1; i <= range; i++) {

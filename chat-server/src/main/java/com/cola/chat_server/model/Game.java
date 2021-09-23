@@ -2,8 +2,7 @@ package com.cola.chat_server.model;
 
 import lombok.Data;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -28,12 +27,12 @@ public class Game {
     /**
      * 炸弹位置
      */
-    private List<Bomb> bombList = new CopyOnWriteArrayList<>();
+    private List<Bomb> bombList = Collections.synchronizedList(new LinkedList<>());
 
     /**
      * 爆炸效果
      */
-    private List<Bomb> boomList = new CopyOnWriteArrayList<>();
+    private List<Bomb> boomList = Collections.synchronizedList(new LinkedList<>());
 
     /**
      * 死亡讯息
