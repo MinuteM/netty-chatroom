@@ -1,6 +1,7 @@
 package com.cola.chat_server.util;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.cola.chat_server.constant.MessageCodeConstant;
@@ -8,6 +9,8 @@ import com.cola.chat_server.model.*;
 import com.cola.chat_server.service.BombThread;
 import com.cola.chat_server.service.GameThread;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+
+import java.util.concurrent.Executors;
 
 public class ActiveUtils {
 
@@ -42,6 +45,14 @@ public class ActiveUtils {
 
     public synchronized static void createGame(String myUserId) {
         Game game = new Game();
+        if (ObjectUtil.isNotEmpty(SessionHolder.game)) {
+            SessionHolder.game.getAnimalMap().forEach((key,value) -> value.setMoveStatus(false));
+            SessionHolder.cachedThreadPool.shutdownNow();
+            SessionHolder.cachedThreadPool = Executors.newCachedThreadPool();
+        }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("game", SessionHolder.game);
+        SessionHolder.channelGroup.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(jsonObject)));
         SessionHolder.game = game;
         GameMap gameMap = new GameMap();
         game.setMap(gameMap);
